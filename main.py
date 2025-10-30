@@ -5,6 +5,9 @@ from trueskillthroughtime import *
 import random
 import matplotlib.pyplot as plt
 
+import pandas as pd
+import PragueLionPlayer
+
 GAMES_DB_PATH = "games_db.csv"
 
 def parse_team(team_string) -> list[str]:
@@ -18,8 +21,8 @@ def parse_team(team_string) -> list[str]:
 
     stripped = str(team_string).strip()
 
-    if stripped.startswith("[") and s.endswith("]"):
-        cleared = s[1:-1].strip()
+    if stripped.startswith("[") and stripped.endswith("]"):
+        cleared = stripped[1:-1].strip()
 
     if not cleared: # empty team
         return []
@@ -90,7 +93,11 @@ def get_players_ratings(history, player_names: list) -> dict[str, tuple[float, f
 def initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df):
     """Read the game data from the source file, initialize players as the PragueLionPlayer class,
     and fetch their ratings and attendance count."""
-    games = [parse_game_row(row) for _, row in games_df.iterrows()]
+    games = []
+    for _, row in games_df.iterrows():
+        game = parse_game_row(row)
+        weight = row.get("weight", 1)
+        games.extend([game] * weight)
     game_history = History(composition=games)
     player_ratings = get_players_ratings(game_history, player_names)
 
@@ -99,15 +106,28 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
     for name in player_names:
         mu, sigma = player_ratings[name]
         current_learning_curve = game_history.learning_curves()[name]
-        prague_lion_player = PragueLionPlayer(name, current_learning_curve, mu, sigma)
+        prague_lion_player = PragueLionPlayer.PragueLionPlayer(name, current_learning_curve, mu, sigma)
         prague_lion_players.append(prague_lion_player)
 
     return prague_lion_players
 
 
-def present_leaderboard(prague_lion_players: list[PragueLionPlayer], outputfile: str):
-    """Dump the players into an output file, sorted by their true skill."""
-    pass
+def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], outputfile: str):
+    """
+    Dump the players in TrueSkill order to csv.
+    Columns: name, rank, true_skill, mu, sigma, games
+    """
+    # Sort: by true_skill desc, then by name asc for stable ordering
+    players_sorted = sorted(
+        prague_lion_players,
+        key=lambda p: (-p.true_skill, p.name.lower())
+    )
+
+    # Write CSV
+    with open(outputfile, "w", encoding="utf-8", newline="") as f:
+        f.write("name,rank,true_skill,mu,sigma,games\n")
+        for idx, player in enumerate(players_sorted, start=1):
+            f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_games}\n")
 
 
 def main(uncertainty_factor: float = 2.0):
@@ -119,7 +139,7 @@ def main(uncertainty_factor: float = 2.0):
     games_df = pandas.read_csv(GAMES_DB_PATH)
     
     prague_lion_players = initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df)
-    present_leaderboard(prague_lion_players, "leaderboard.txt")
+    dump_leaderboard(prague_lion_players, "leaderboard.csv")
 
 main()
 
