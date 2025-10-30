@@ -131,7 +131,7 @@ def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], outputfile: st
             f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_games}\n")
 
 
-def main(uncertainty_factor: float = 2.0):
+def main():
     """Main function to load and parse the games database."""
     player_names = load_all_player_names()
     print("Unique Player Names:", player_names)
@@ -142,6 +142,8 @@ def main(uncertainty_factor: float = 2.0):
     prague_lion_players = initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df)
     dump_leaderboard(prague_lion_players, "leaderboard.csv")
 
-main()
+
+if __name__ == "__main__":
+    main()
 
 
