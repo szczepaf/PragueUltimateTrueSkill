@@ -10,16 +10,15 @@ import PragueLionPlayer
 
 GAMES_DB_PATH = "games_db.csv"
 
-def parse_team(team_string) -> list[str]:
-    """Parse a team string into a list of player names.
+def parse_team(team_string: str) -> list[str]:
+    """Parse a team string into a list of player names as strings.
 
-    The input format is expected like: "[Alice|Bob|Charlie]".
-    Robust to extra whitespace and empty items.
+    The input format is: "[Alice|Bob|Charlie]".
     """
-    if team_string is None:
+    if not team_string:
         return []
 
-    stripped = str(team_string).strip()
+    stripped = team_string.strip()
 
     if stripped.startswith("[") and stripped.endswith("]"):
         cleared = stripped[1:-1].strip()
@@ -29,7 +28,7 @@ def parse_team(team_string) -> list[str]:
 
     # Split on | and trim whitespace from each name
     names = [part.strip() for part in cleared.split("|")]
-    # Filter out any accidental empty strings
+    # Filter out accidental empty strings, return the names
     return [n for n in names if n]
 
 
@@ -43,31 +42,32 @@ def load_all_player_names() -> list[str]:
     """
     df = pandas.read_csv(GAMES_DB_PATH)
 
-    players: set[str] = set()
+    player_names: set[str] = set()
 
     for team_col in ("winning_team", "losing_team"):
         for team_string in df[team_col]:
             for name in parse_team(team_string):
-                players.add(name)
+                player_names.add(name)
 
     # Return a sorted list for reproducibility
     # TODO: check against an allowed file of player names for types and disallowed names
-    return sorted(players)
+    return sorted(player_names)
 
 def get_attendance_count_for_player(prague_lion_player: PragueLionPlayer, games_df: pd.DataFrame) -> int:
-    """Count how many games a player has attended based on the games dataframe."""
-    attendance_count = 0
+    """Count how many attendences a player has attended based on the df with games.
+    Attendences differ from games played, as one practice session may have multiple games.
+    Attendences are counted as the number of unique dates a player has played on."""
     return 0
     #TODO: implement attendance counting logic
 
 def parse_game_row(row: dict) -> list:
     """Parse a single row from the games database into TTT's composition format.
 
-    TrueSkill Through Time's History accepts a 'composition' list where
-    each element is a list of two (or more) teams, and the order implies
+    TrueSkill Through Time's History accepts a composition list where
+    each element is a list of two or more teams, and the order implies
     the result: the first team beat the later team(s).
 
-    For our two-team case, we return:
+    So we return:
         [ winning_team_list, losing_team_list ]
 
     TODO: draws
@@ -77,14 +77,15 @@ def parse_game_row(row: dict) -> list:
     return [winning, losing]
 
 
-def get_players_ratings(history, player_names: list) -> dict[str, tuple[float, float]]:
-    """Get the final rating of players from the game history, consisting of mean and variance.
-    They are stored in a dict by their names."""
+def get_players_ratings(history: History, player_names: list) -> dict[str, tuple[float, float]]:
+    """Fetch the final rating of players from the game history, consisting of mean and variance.
+    The ratings are returned in a dict keyed by the player names."""
     history.convergence() # calculate final ratings by TrueSkill Through Time
+    # TODO: check if default params for the method above should be adjusted
     ratings = dict()
     for player_name in player_names:
         player_curve = history.learning_curves()[player_name]
-        final_rating = player_curve[-1][1] # get the last Gaussian object
+        final_rating = player_curve[-1][1] # get the last Gaussian object corresponding to the player's final rating
         ratings[player_name] = (final_rating.mu, final_rating.sigma) # get the mean and std deviation
 
     return ratings
@@ -96,9 +97,9 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
     games = []
     for _, row in games_df.iterrows():
         game = parse_game_row(row)
-        weight = row.get("weight", 1)
-        games.extend([game] * weight)
-    game_history = History(composition=games)
+        weight = row.get("weight", 1) # TODO: use weights to make RedZone games more important?
+        games.append(game)
+    game_history = History(composition=games) # TODO: any important params?
     player_ratings = get_players_ratings(game_history, player_names)
 
     prague_lion_players = []

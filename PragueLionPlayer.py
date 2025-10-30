@@ -35,5 +35,10 @@ class PragueLionPlayer:
         """
         Return a stable string dump of all fields as a string.     
         """
-        return f"{self.name},{self.number_of_games},{self.true_skill:.6f},{self.mu:.6f},{self.sigma:.6f}"        
+        return f"{self.name},{self.number_of_games},{self.true_skill:.6f},{self.mu:.6f},{self.sigma:.6f}"       
+
+    def plot_learning_curve(self):
+        """Plot the learning curve of the player using matplotlib."""
+        # TODO: implement plotting
+        pass
     
