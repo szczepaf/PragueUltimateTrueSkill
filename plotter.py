@@ -1,5 +1,5 @@
 """This whole module is TODO
-functions for plotting the leaderboard and skill distributions must we written properly, those below are just ai drafts"""
+functions for plotting the leaderboard and skill distributions must be written properly, those below are just ai drafts"""
 
 def plot_skill_distributions(leaderboard_file: str) -> None:
     """Plot the leaderboard using matplotlib.
