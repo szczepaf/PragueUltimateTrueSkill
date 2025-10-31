@@ -4,16 +4,20 @@ import pandas
 from trueskillthroughtime import *
 import random
 import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 
 import pandas as pd
 import PragueLionPlayer
+from plotter import *
 
 GAMES_DB_PATH = "games_db.csv"
+LEADERBOARD_FILE = "leaderboard.csv"
 
 def parse_team(team_string: str) -> list[str]:
     """Parse a team string into a list of player names as strings.
 
-    The input format is: "[Alice|Bob|Charlie]".
+    The input format is: "[Alice|Bob|Charlie]", which would return: ["Alice", "Bob", "Charlie"].
     """
     if not team_string:
         return []
@@ -35,10 +39,7 @@ def parse_team(team_string: str) -> list[str]:
 
 def load_all_player_names() -> list[str]:
     """Load all unique player names from the games database CSV file.
-
-    The CSV is expected to have columns 'winning_team' and 'losing_team'
-    where each team is stored as a bracketed, '|' separated list, e.g.:
-        [Frnda|Xnapy|Scoot]
+    The CSV is expected to have columns 'winning_team' and 'losing_team', and players do not appear elsewhere.
     """
     df = pandas.read_csv(GAMES_DB_PATH)
 
@@ -54,16 +55,16 @@ def load_all_player_names() -> list[str]:
     return sorted(player_names)
 
 def get_attendance_count_for_player(prague_lion_player: PragueLionPlayer, games_df: pd.DataFrame) -> int:
-    """Count how many attendences a player has attended based on the df with games.
+    """Count how many attendences a player has.
     Attendences differ from games played, as one practice session may have multiple games.
     Attendences are counted as the number of unique dates a player has played on."""
     return 0
     #TODO: implement attendance counting logic
 
-def parse_game_row(row: dict) -> list:
-    """Parse a single row from the games database into TTT's composition format.
+def parse_game_row(row: dict) -> list[list[str]]:
+    """Parse a single row from the games database into TrueSkill Through Time's composition format.
 
-    TrueSkill Through Time's History accepts a composition list where
+    TTT History accepts a composition list where
     each element is a list of two or more teams, and the order implies
     the result: the first team beat the later team(s).
 
@@ -72,8 +73,8 @@ def parse_game_row(row: dict) -> list:
 
     TODO: draws
     """
-    winning = parse_team(row["winning_team"])
-    losing = parse_team(row["losing_team"])
+    winning: list[str] = parse_team(row["winning_team"])
+    losing: list[str] = parse_team(row["losing_team"])
     return [winning, losing]
 
 
@@ -91,18 +92,18 @@ def get_players_ratings(history: History, player_names: list) -> dict[str, tuple
     return ratings
 
 
-def initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df):
-    """Read the game data from the source file, initialize players as the PragueLionPlayer class,
+def initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df) -> list[PragueLionPlayer]:
+    """Read the game data from the source file, initialize players as PragueLionPlayer objects,
     and fetch their ratings and attendance count."""
     games = []
     for _, row in games_df.iterrows():
         game = parse_game_row(row)
         weight = row.get("weight", 1) # TODO: use weights to make RedZone games more important?
-        games.append(game)
+        games.append(game) 
     game_history = History(composition=games) # TODO: any important params?
-    player_ratings = get_players_ratings(game_history, player_names)
+    player_ratings: dict[str, tuple[float, float]] = get_players_ratings(game_history, player_names)
 
-    prague_lion_players = []
+    prague_lion_players: list[PragueLionPlayer] = []
 
     for name in player_names:
         mu, sigma = player_ratings[name]
@@ -113,7 +114,7 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
     return prague_lion_players
 
 
-def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], outputfile: str):
+def dump_leaderboard(prague_lion_players: list[PragueLionPlayer]) -> None:
     """
     Dump the players in TrueSkill order to csv.
     Columns: name, rank, true_skill, mu, sigma, games
@@ -125,22 +126,26 @@ def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], outputfile: st
     )
 
     # Write CSV
-    with open(outputfile, "w", encoding="utf-8", newline="") as f:
+    with open(LEADERBOARD_FILE, "w", encoding="utf-8", newline="") as f:
         f.write("name,rank,true_skill,mu,sigma,games\n")
         for idx, player in enumerate(players_sorted, start=1):
-            f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_games}\n")
+            f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_practices}\n")
 
 
-def main():
-    """Main function to load and parse the games database."""
+
+def main() -> None:
+    """1. Load all player names from the games database.
+       2. Read the games csv.
+       3. Initialize Prague Lion Players with ratings computed from the game history.
+       4. Dump the leaderboard to a CSV file.
+    """
     player_names = load_all_player_names()
-    print("Unique Player Names:", player_names)
 
     # Load the games dataframe
     games_df = pandas.read_csv(GAMES_DB_PATH)
     
     prague_lion_players = initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df)
-    dump_leaderboard(prague_lion_players, "leaderboard.csv")
+    dump_leaderboard(prague_lion_players)
 
 
 if __name__ == "__main__":
