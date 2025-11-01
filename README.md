@@ -32,9 +32,9 @@ TODO
 add a flag for each game: mini or standard or a special game (e.g. with a shotclock, limited number of passes, etc.). Then, create a filter that filters out only selected game modes.
 
 #### Literature
-- A primer: https://www.moserware.com/2010/03/computing-your-skill.html
-- Jake Smart about using TrueSkill Through Time for Ultimate: https://creators.spotify.com/pod/profile/pod-practice/episodes/Jake-Smart--Brown-BMo--Boston-DiG--Boston-Glory--Ep-78-e2tv5dm, minutes 0:42 - 0:55.
 - Microsoft's Article about TrueSkill: https://www.microsoft.com/en-us/research/project/trueskill-ranking-system/
+- A more informal primer: https://www.moserware.com/2010/03/computing-your-skill.html
+- Jake Smart about using TrueSkill Through Time for Ultimate: https://creators.spotify.com/pod/profile/pod-practice/episodes/Jake-Smart--Brown-BMo--Boston-DiG--Boston-Glory--Ep-78-e2tv5dm, minutes 0:42 - 0:55.
 - TrueSkill original paper: https://www.microsoft.com/en-us/research/wp-content/uploads/2006/01/TR-2006-80.pdf
 - TrueSkill Through Time paper: https://www.jstatsoft.org/article/view/v112i06
 
