@@ -13,7 +13,10 @@ Each player's performance is modelled as a Gaussian distribution with mean μ (s
 A team performance is a sum of the player's performances (a sum of Gaussian distributions also is one). Outcomes of games move players' μ up or down, larger upsets move it more. Playing games also gradually reduces the uncertainty σ. New players start with high uncertainty and calibrate as they play games, which by itself improves their TrueSkill rating.
 
 ##### TrueSkill Through Time (TTT)
-The TrueSkill Through Time variant focuses on propagating the results through time via a Baysian Network, TODO: why is it better. TODO: github repo.
+The TrueSkill Through Time variant focuses on propagating the results through time via a Baysian Network. 
+TODO: why is it better.
+
+[See the docs for more info.](https://trueskillthroughtime.readthedocs.io/en/latest/)
 
 Applying the TTT algorithm for Ultimate Frisbee was inspired by Jake Smart, who has done this for the College team Brownian Motion.
 
