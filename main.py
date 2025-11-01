@@ -1,13 +1,12 @@
 import csv
 import os
-import pandas
+import pandas as pd
 from trueskillthroughtime import *
 import random
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-import pandas as pd
 import PragueLionPlayer
 from plotter import *
 
@@ -41,7 +40,7 @@ def load_all_player_names() -> list[str]:
     """Load all unique player names from the games database CSV file.
     The CSV is expected to have columns 'winning_team' and 'losing_team', and players do not appear elsewhere.
     """
-    df = pandas.read_csv(GAMES_DB_PATH)
+    df = pd.read_csv(GAMES_DB_PATH)
 
     player_names: set[str] = set()
 
@@ -61,21 +60,25 @@ def get_attendance_count_for_player(prague_lion_player: PragueLionPlayer, games_
     return 0
     #TODO: implement attendance counting logic
 
-def parse_game_row(row: dict) -> list[list[str]]:
+def parse_game_row(row: dict) -> tuple[list[list[str]], list[int]]:
     """Parse a single row from the games database into TrueSkill Through Time's composition format.
 
     TTT History accepts a composition list where
     each element is a list of two or more teams, and the order implies
     the result: the first team beat the later team(s).
 
-    So we return:
-        [ winning_team_list, losing_team_list ]
+    Along with the teams, we check if a draw occured and return the appropriate results list.
+    If the game ended in a draw, we return [0, 0], otherwise [1, 0] (signifying a win for the first team).
 
-    TODO: draws
+    return:
+        [ winning_team_list, losing_team_list ], results_list
+
     """
+    draw_flag: int = row["draw"]
+    results = [0, 0] if draw_flag else [1, 0]
     winning: list[str] = parse_team(row["winning_team"])
     losing: list[str] = parse_team(row["losing_team"])
-    return [winning, losing]
+    return [winning, losing], results
 
 
 def get_players_ratings(history: History, player_names: list) -> dict[str, tuple[float, float]]:
@@ -95,12 +98,20 @@ def get_players_ratings(history: History, player_names: list) -> dict[str, tuple
 def initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df) -> list[PragueLionPlayer]:
     """Read the game data from the source file, initialize players as PragueLionPlayer objects,
     and fetch their ratings and attendance count."""
-    games = []
+    collections = []
+    results = []
+    
     for _, row in games_df.iterrows():
-        game = parse_game_row(row)
-        weight = row.get("weight", 1) # TODO: use weights to make RedZone games more important?
-        games.append(game) 
-    game_history = History(composition=games) # TODO: any important params?
+        game, result = parse_game_row(row)
+        collections.append(game)
+        results.append(result)
+    game_history = History(composition=collections, results=results, p_draw=0.25)
+    # It is not clear how to set the parameter p_draw.
+    # A larger p_draw will mean less information is gained from a draw, as it is less rare, but more information is gained from a win.
+    # Considering a lot of the ranked games are redzone games, where draws can happen quite easily, as well as in mini games, we opt for a value that feels "larger", and that is 25 %.
+    # The original TrueSkill docs specify p_draw=0.10 as a default value, but it very heavily depends on the environment.
+    # Future TODO: compute p_draw from the data, once we have a larger dataset.
+    
     player_ratings: dict[str, tuple[float, float]] = get_players_ratings(game_history, player_names)
 
     prague_lion_players: list[PragueLionPlayer] = []
@@ -142,7 +153,7 @@ def main() -> None:
     player_names = load_all_player_names()
 
     # Load the games dataframe
-    games_df = pandas.read_csv(GAMES_DB_PATH)
+    games_df = pd.read_csv(GAMES_DB_PATH)
     
     prague_lion_players = initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df)
     dump_leaderboard(prague_lion_players)
@@ -150,5 +161,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 

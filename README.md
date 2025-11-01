@@ -19,7 +19,7 @@ Applying the TTT algorithm for Ultimate Frisbee was inspired by Jake Smart, who 
 
 #### Usage
 - Store the game results in the csv file `games_db.csv`
-- Game format: TODO, weights: TODO
+- Game format: TODO
 - Run the `main.py` module, which will run the TTT algorithm from the stored games and will dump the player ratings into a csv  file `leaderboard.csv`
 - plotting: TODO
 - player curves: TODO
@@ -27,6 +27,9 @@ Applying the TTT algorithm for Ultimate Frisbee was inspired by Jake Smart, who 
 
 #### Requirements
 TODO
+
+#### Future Ideas
+add a flag for each game: mini or standard or a special game (e.g. with a shotclock, limited number of passes, etc.). Then, create a filter that filters out only selected game modes.
 
 #### Literature
 - A primer: https://www.moserware.com/2010/03/computing-your-skill.html
