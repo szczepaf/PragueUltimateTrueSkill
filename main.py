@@ -8,10 +8,9 @@ import numpy as np
 import seaborn as sns
 
 import PragueLionPlayer
-from plotter import *
 
-GAMES_DB_PATH = "games_db.csv"
-LEADERBOARD_FILE = "leaderboard.csv"
+DEFAULT_GAMES_DB_PATH = "games_db.csv"
+DEFAULT_LEADERBOARD_FILE = "leaderboard.csv"
 
 def parse_team(team_string: str) -> list[str]:
     """Parse a team string into a list of player names as strings.
@@ -36,11 +35,11 @@ def parse_team(team_string: str) -> list[str]:
 
 
 
-def load_all_player_names() -> list[str]:
+def load_all_player_names(games_file: str = DEFAULT_GAMES_DB_PATH) -> list[str]:
     """Load all unique player names from the games database CSV file.
     The CSV is expected to have columns 'winning_team' and 'losing_team', and players do not appear elsewhere.
     """
-    df = pd.read_csv(GAMES_DB_PATH)
+    df = pd.read_csv(games_file)
 
     player_names: set[str] = set()
 
@@ -125,7 +124,7 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
     return prague_lion_players
 
 
-def dump_leaderboard(prague_lion_players: list[PragueLionPlayer]) -> None:
+def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], leaderboard_file: str = DEFAULT_LEADERBOARD_FILE) -> None:
     """
     Dump the players in TrueSkill order to csv.
     Columns: name, rank, true_skill, mu, sigma, games
@@ -137,26 +136,26 @@ def dump_leaderboard(prague_lion_players: list[PragueLionPlayer]) -> None:
     )
 
     # Write CSV
-    with open(LEADERBOARD_FILE, "w", encoding="utf-8", newline="") as f:
+    with open(leaderboard_file, "w", encoding="utf-8", newline="") as f:
         f.write("name,rank,true_skill,mu,sigma,games\n")
         for idx, player in enumerate(players_sorted, start=1):
             f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_practices}\n")
 
 
 
-def main() -> None:
-    """1. Load all player names from the games database.
-       2. Read the games csv.
-       3. Initialize Prague Lion Players with ratings computed from the game history.
-       4. Dump the leaderboard to a CSV file.
+def main(games_file: str = DEFAULT_GAMES_DB_PATH, leaderboard_file: str = DEFAULT_LEADERBOARD_FILE) -> None:
+    """1. Load all player names from the games database. If the database is not specified, use the default 'games_db.csv' path.
+       2. Read the games csv from the same file as in the previous step.
+       3. Compute the player ratings from the game history. Store them in PragueLionPlayer objects.
+       4. Dump the leaderboard to a CSV file. If not specified, dump into the default 'leaderboard.csv' path.
     """
-    player_names = load_all_player_names()
+    player_names = load_all_player_names(games_file)
 
     # Load the games dataframe
-    games_df = pd.read_csv(GAMES_DB_PATH)
+    games_df = pd.read_csv(games_file)
     
-    prague_lion_players = initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df)
-    dump_leaderboard(prague_lion_players)
+    prague_lion_players_with_ratings = initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df)
+    dump_leaderboard(prague_lion_players_with_ratings, leaderboard_file)
 
 
 if __name__ == "__main__":

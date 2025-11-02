@@ -16,23 +16,47 @@ A team performance is a sum of the player's performances (a sum of Gaussian dist
 The TrueSkill Through Time variant focuses on propagating the results through time via a Baysian Network. 
 TODO: why is it better.
 
-[See the docs for more info.](https://trueskillthroughtime.readthedocs.io/en/latest/)
+[See the TTT docs for more information about the Through Time variant.](https://trueskillthroughtime.readthedocs.io/en/latest/)
 
 Applying the TTT algorithm for Ultimate Frisbee was inspired by Jake Smart, who has done this for the College team Brownian Motion.
 
 #### Usage
-- Store the game results in the csv file `games_db.csv`
-- Game format: TODO
-- Run the `main.py` module, which will run the TTT algorithm from the stored games and will dump the player ratings into a csv  file `leaderboard.csv`
-- plotting: TODO
-- player curves: TODO
+- Store the game results in the csv file ```games_db.csv```. The expected dataframe has 4 columns: ```date,draw,winning_team,losing_team```. If the game ended in a draw, let the ```draw``` column be 1, otherwise, let it be zero. If the game was not a draw, the winning team comes first (in the `winning_team` column), the losing team second (in the ```losing_team``` column). Teams are stored in a list and players are separated via the ```|``` sign, e.g.: ```[Freny|Jezek|MP|Karlos|B|FilaH]```. An examplary column thus looks like this: 
+
+```csv
+2025-10-29,0,[Freny|MP|B|FilaH],[Jazz|Dejv|VojtaR|Vilda]
+```
+
+- Run the ```main.py``` module, which will run the TTT algorithm from the stored games, will compute the player rankings and dump them into the ```leaderboard.csv``` file. If you want to use other input and output files than the default ones, pass them as params ```games_file``` and ```leaderoard_file``` to main.
 
 
 #### Requirements
-TODO
+Install the following Python packages:
+- numpy
+- pandas
+- matplotlib
+- seaborn
+- trueskillthroughtime
+
+via 
+
+```bash
+pip install numpy pandas matplotlib seaborn trueskillthroughtime
+```
+or, once you cloned the repo,
+
+```bash
+pip install -r requirements.txt
+```
+
 
 #### Future Ideas
-add a flag for each game: mini or standard or a special game (e.g. with a shotclock, limited number of passes, etc.). Then, create a filter that filters out only selected game modes.
+- add a flag for each game: mini or standard or a special game (e.g. with a shotclock, limited number of passes, etc.). Then, create a filter that filters out only selected game modes.
+- discuss p_draw
+- discuss the beta param and the dynamic tau param
+- plotting: TODO
+- player curves: TODO
+- team creator: TODO
 
 #### Literature
 - Microsoft's Article about TrueSkill: https://www.microsoft.com/en-us/research/project/trueskill-ranking-system/
