@@ -52,12 +52,36 @@ def load_all_player_names(games_file: str = DEFAULT_GAMES_DB_PATH) -> list[str]:
     # TODO: check against an allowed file of player names for types and disallowed names
     return sorted(player_names)
 
-def get_attendance_count_for_player(prague_lion_player: PragueLionPlayer, games_df: pd.DataFrame) -> int:
-    """Count how many attendences a player has.
-    Attendences differ from games played, as one practice session may have multiple games.
-    Attendences are counted as the number of unique dates a player has played on."""
-    return 0
-    #TODO: implement attendance counting logic
+def calculate_players_attendance(games_df: pd.DataFrame) -> dict[str, dict[str, int]]:
+    """Calculates the total number of games played and unique practice days attended for every player in the games DataFrame.
+    
+    return:
+        A dictionary mapping player names to their statistics.
+        Example:    
+            {   'Alice': {'practices': 10, 'games': 25},
+                'Bob': {'practices': 12, 'games': 30}
+            }
+    """
+    winners_series = games_df['winning_team'].apply(parse_team)
+    losers_series = games_df['losing_team'].apply(parse_team)
+    all_players_series = winners_series + losers_series
+    
+    player_date_df = pd.DataFrame({
+        'practice_date': pd.to_datetime(games_df['date']).dt.date,
+        'players': all_players_series
+    })
+    
+    exploded_df = player_date_df.explode('players')
+    
+    game_counts = exploded_df.groupby('players').size().rename('games')
+
+    unique_attendances = exploded_df.drop_duplicates(subset=['practice_date', 'players'])
+    practice_counts = unique_attendances.groupby('players').size().rename('practices')
+    
+    combined_stats_df = pd.concat([practice_counts, game_counts], axis=1)
+    
+    return combined_stats_df.to_dict('index')
+
 
 def parse_game_row(row: dict) -> tuple[list[list[str]], list[int]]:
     """Parse a single row from the games database into TrueSkill Through Time's composition format.
@@ -113,12 +137,16 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
     
     player_ratings: dict[str, tuple[float, float]] = get_players_ratings(game_history, player_names)
 
+    attendance = calculate_players_attendance(games_df)
+    
     prague_lion_players: list[PragueLionPlayer] = []
 
     for name in player_names:
         mu, sigma = player_ratings[name]
         current_learning_curve = game_history.learning_curves()[name]
         prague_lion_player = PragueLionPlayer.PragueLionPlayer(name, current_learning_curve, mu, sigma)
+        prague_lion_player.number_of_practices = attendance.get(name, {'practices': 0})['practices']
+        prague_lion_player.number_of_games = attendance.get(name, {'games': 0})['games']
         prague_lion_players.append(prague_lion_player)
 
     return prague_lion_players
@@ -137,9 +165,9 @@ def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], leaderboard_fi
 
     # Write CSV
     with open(leaderboard_file, "w", encoding="utf-8", newline="") as f:
-        f.write("name,rank,true_skill,mu,sigma,games\n")
+        f.write("name,rank,true_skill,mu,sigma,practices,games\n")
         for idx, player in enumerate(players_sorted, start=1):
-            f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_practices}\n")
+            f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_practices},{player.number_of_games}\n")
 
 
 
