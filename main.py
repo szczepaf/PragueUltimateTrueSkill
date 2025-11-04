@@ -150,10 +150,11 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
     return prague_lion_players
 
 
-def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], leaderboard_file: str = DEFAULT_LEADERBOARD_FILE) -> None:
+def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], leaderboard_file: str = DEFAULT_LEADERBOARD_FILE, leaderboards_practice_threshold = 2) -> None:
     """
     Dump the players in TrueSkill order to csv.
-    Columns: name, rank, true_skill, mu, sigma, games
+    The leaderboards_practice_threshold specifies how many practices one has to attend to get into the leaderboad (rankings are computed nevertheless). The default is two.
+    Columns: name, rank, true_skill, mu, sigma, game, practices
     """
     # Sort: by true_skill desc, then by name asc for stable ordering
     players_sorted = sorted(
@@ -161,8 +162,8 @@ def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], leaderboard_fi
         key=lambda p: (-p.true_skill, p.name.lower())
     )
 
-    # only dump those players with at least 2 practices and 3 games # TODO: specify this threshold properly
-    players_filtered = [player for player in players_sorted if player.number_of_practices >= 2 and player.number_of_games >= 3]
+    # only dump those players with at least 2 practices
+    players_filtered = [player for player in players_sorted if player.number_of_practices >= 2] 
 
 
 

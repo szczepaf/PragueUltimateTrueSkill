@@ -27,7 +27,7 @@ Applying the TTT algorithm for Ultimate Frisbee was inspired by Jake Smart, who 
 2025-10-29,0,[Freny|MP|B|FilaH],[Jazz|Dejv|VojtaR|Vilda]
 ```
 
-- Run the ```main.py``` module, which will run the TTT algorithm from the stored games, will compute the player rankings and dump them into the ```leaderboard.csv``` file. If you want to use other input and output files than the default ones, pass them as params ```games_file``` and ```leaderoard_file``` to main.
+- Run the ```main.py``` module, which will run the TTT algorithm from the stored games, will compute the player rankings and dump them into the ```leaderboard.csv``` file. If you want to use other input and output files than the default ones, pass them as params ```games_file``` and ```leaderoard_file``` to main. Only players passing the attendence threshold (the default is two practices, configure in the `dump_leaderboard` function) are eligible to appear in the leaderboard.
 
 
 #### Requirements
