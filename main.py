@@ -144,9 +144,7 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
     for name in player_names:
         mu, sigma = player_ratings[name]
         current_learning_curve = game_history.learning_curves()[name]
-        prague_lion_player = PragueLionPlayer.PragueLionPlayer(name, current_learning_curve, mu, sigma)
-        prague_lion_player.number_of_practices = attendance.get(name, {'practices': 0})['practices']
-        prague_lion_player.number_of_games = attendance.get(name, {'games': 0})['games']
+        prague_lion_player = PragueLionPlayer.PragueLionPlayer(name, current_learning_curve, mu, sigma,attendance[name]['practices'],attendance[name]['games'])
         prague_lion_players.append(prague_lion_player)
 
     return prague_lion_players
@@ -163,10 +161,15 @@ def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], leaderboard_fi
         key=lambda p: (-p.true_skill, p.name.lower())
     )
 
+    # only dump those players with at least 2 practices and 3 games # TODO: specify this threshold properly
+    players_filtered = [player for player in players_sorted if player.number_of_practices >= 2 and player.number_of_games >= 3]
+
+
+
     # Write CSV
     with open(leaderboard_file, "w", encoding="utf-8", newline="") as f:
         f.write("name,rank,true_skill,mu,sigma,practices,games\n")
-        for idx, player in enumerate(players_sorted, start=1):
+        for idx, player in enumerate(players_filtered, start=1):
             f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_practices},{player.number_of_games}\n")
 
 
