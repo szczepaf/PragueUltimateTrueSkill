@@ -35,9 +35,13 @@ def parse_team(team_string: str) -> list[str]:
 
 
 
-def load_all_player_names(games_file: str = DEFAULT_GAMES_DB_PATH) -> list[str]:
+def load_all_player_names(games_file: str = DEFAULT_GAMES_DB_PATH, allowed_names_file: str | None = None) -> list[str]:
     """Load all unique player names from the games database CSV file.
     The CSV is expected to have columns 'winning_team' and 'losing_team', and players do not appear elsewhere.
+    
+    If the allowed names file is specified, the loaded names will be checked against this file, which holds one name per line.
+    If a name that is not found in this file is loaded, an error will be raised.
+    The aim is simply to avoid making typos when entering the games.
     """
     df = pd.read_csv(games_file)
 
@@ -48,8 +52,16 @@ def load_all_player_names(games_file: str = DEFAULT_GAMES_DB_PATH) -> list[str]:
             for name in parse_team(team_string):
                 player_names.add(name)
 
+    if allowed_names_file:
+        with open(allowed_names_file, "r") as f:
+            allowed_names: set[str] = set(line.strip() for line in f)
+        
+        unknown_players = player_names - allowed_names
+        if unknown_players:
+            raise ValueError(f"Unknown players found in games file: {', '.join(unknown_players)}. Check for typos.")
+
+
     # Return a sorted list for reproducibility
-    # TODO: check against an allowed file of player names for types and disallowed names
     return sorted(player_names)
 
 def calculate_players_attendance(games_df: pd.DataFrame) -> dict[str, dict[str, int]]:
@@ -175,13 +187,13 @@ def dump_leaderboard(prague_lion_players: list[PragueLionPlayer], leaderboard_fi
 
 
 
-def main(games_file: str = DEFAULT_GAMES_DB_PATH, leaderboard_file: str = DEFAULT_LEADERBOARD_FILE) -> None:
-    """1. Load all player names from the games database. If the database is not specified, use the default 'games_db.csv' path.
+def main(games_file: str = DEFAULT_GAMES_DB_PATH, leaderboard_file: str = DEFAULT_LEADERBOARD_FILE, allowed_names_path: str|None = None) -> None:
+    """1. Load all player names from the games database. If the database is not specified, use the default 'games_db.csv' path. Optionally, allow only players specified in a separate file.
        2. Read the games csv from the same file as in the previous step.
        3. Compute the player ratings from the game history. Store them in PragueLionPlayer objects.
        4. Dump the leaderboard to a CSV file. If not specified, dump into the default 'leaderboard.csv' path.
     """
-    player_names = load_all_player_names(games_file)
+    player_names = load_all_player_names(games_file, allowed_names_path)
 
     # Load the games dataframe
     games_df = pd.read_csv(games_file)
