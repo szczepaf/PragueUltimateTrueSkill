@@ -140,12 +140,10 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
         game, result = parse_game_row(row)
         collections.append(game)
         results.append(result)
-    game_history = History(composition=collections, results=results, p_draw=0.25)
+    game_history = History(composition=collections, results=results, p_draw=(1/6))
     # It is not clear how to set the parameter p_draw.
     # A larger p_draw will mean less information is gained from a draw, as it is less rare, but more information is gained from a win.
-    # Considering a lot of the ranked games are redzone games, where draws can happen quite easily, as well as in mini games, we opt for a value that feels "larger", and that is 25 %.
-    # The original TrueSkill docs specify p_draw=0.10 as a default value, but it very heavily depends on the environment.
-    # Future TODO: compute p_draw from the data, once we have a larger dataset.
+    # For now, we opt for a value of 1/6 computed from the seen data. With more games play, we will update this.
     
     player_ratings: dict[str, tuple[float, float]] = get_players_ratings(game_history, player_names)
 
