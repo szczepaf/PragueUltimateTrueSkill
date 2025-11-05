@@ -22,7 +22,7 @@ class PragueLionPlayer:
     number_of_games: int = 0
     learning_curve: list[tuple[int, Gaussian]] = []
     k: float = 3.0
-    def __init__(self, name: str, learning_curve: list[tuple[int, Gaussian]], mu: float = 25, sigma: float = (28/3), number_of_practices: int = 0, number_of_games: int = 0) -> None:
+    def __init__(self, name: str, learning_curve: list[tuple[int, Gaussian]], mu: float = 25, sigma: float = (25/3), number_of_practices: int = 0, number_of_games: int = 0) -> None:
         """Initialize the PragueLionPlayer with a name, mu, sigma, and number of practices attended.
         Use default TrueSkill starting values for mu and sigma.
         Compute True Skill as mu - k * sigma.
