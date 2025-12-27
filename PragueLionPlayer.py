@@ -42,8 +42,4 @@ class PragueLionPlayer:
         """
         return f"{self.name},{self.number_of_practices},{self.number_of_games},{self.true_skill:.3f},{self.mu:.3f},{self.sigma:.3f}"       
 
-    def plot_learning_curve(self):
-        """Plot the learning curve of the player using matplotlib."""
-        # TODO: implement plotting
-        pass
-    
+

@@ -3,9 +3,7 @@ import os
 import pandas as pd
 from trueskillthroughtime import *
 import random
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
 import PragueLionPlayer
 
@@ -126,7 +124,6 @@ def get_players_ratings(history: History, player_names: list) -> dict[str, tuple
     """Fetch the final rating of players from the game history, consisting of mean and variance.
     The ratings are returned in a dict keyed by the player names."""
     history.convergence() # calculate final ratings by TrueSkill Through Time
-    # TODO: check if default params for the method above should be adjusted
     ratings = dict()
     for player_name in player_names:
         player_curve = history.learning_curves()[player_name]
