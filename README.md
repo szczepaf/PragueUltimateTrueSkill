@@ -13,10 +13,9 @@ Each player's performance is modelled as a Gaussian distribution with mean μ (s
 A team performance is a sum of the player's performances (a sum of Gaussian distributions also is one). Outcomes of games move players' μ up or down, larger upsets move it more. Playing games also gradually reduces the uncertainty σ. New players start with high uncertainty and calibrate as they play games, which by itself improves their TrueSkill rating.
 
 ##### TrueSkill Through Time (TTT)
-The TrueSkill Through Time variant focuses on propagating the results through time via a Baysian Network. 
-TODO: why is it better.
+The TrueSkill Through Time variant aims to improve the vanilla TrueSkill algorithm to provide reasonable estimates more quickly. Also, importantly, it propagates the results through time via a Baysian Network. This means the following: vanilla TrueSkill only updates the estimates after each result, whereas TTT propagates results both forward and backward through time. For example, if you beat someone who later becomes the GOAT, TTT will take that into account, whereas TrueSkill will only consider the current rating of the opponent.
 
-[See the TTT docs for more information about the Through Time variant.](https://trueskillthroughtime.readthedocs.io/en/latest/)
+[See the TTT docs.](https://trueskillthroughtime.readthedocs.io/en/latest/)
 
 Applying the TTT algorithm for Ultimate Frisbee was inspired by Jake Smart, who has done this for the College team Brownian Motion.
 
@@ -51,13 +50,17 @@ pip install -r requirements.txt
 ```
 
 
+#### A couple of notes about the implementation
+- Some games allow a draw, some do not. While a standard game of Ultimate does not allow a draw, the ranked matches in question are often mini games or other variations where a draw can occur. TrueSkill uses a parameter `p_draw` in its ranking calculations, which estimates the probability of the game ending in a draw. Intuitively, if this value is very small, any draw will be very significant and hold great value, whereas if it will be very large, non-draw results will be significant and hold great value. We set `p_draw` by looking how frequent it is across all games - that is the only approach that realistically makes sense.
+- The `beta` parameter is sort of a scale of the estimates: skills at the distance of one `beta` mean a 76 % probability of winning. We use the default value (1), but in the future, this could be tuned by looking at the rankings of players one knows well.
+- The `gamma` parameter is a dynamic factor of skill and we again use the default value (0.03). It addresses the fact that skills change over time and inbetween games. Practically, `gamma` squared is added to uncertainty between each match. This makes sense to do between the weekly practices, but not when multiple games occur during one practice. In the future, one could write a feature which only adds gamma if some (real-life) time passes between the games, as denoted by the date column.
+
 #### Future Ideas
 - add a flag for each game: mini or standard or a special game (e.g. with a shotclock, limited number of passes, etc.). Then, create a filter that filters out only selected game modes.
-- discuss p_draw
-- discuss the beta param and the dynamic tau param
 - plotting: TODO
 - player curves: TODO
 - team creator: TODO
+
 
 #### Literature
 - Microsoft's Article about TrueSkill: https://www.microsoft.com/en-us/research/project/trueskill-ranking-system/
@@ -65,4 +68,5 @@ pip install -r requirements.txt
 - Jake Smart about using TrueSkill Through Time for Ultimate: https://creators.spotify.com/pod/profile/pod-practice/episodes/Jake-Smart--Brown-BMo--Boston-DiG--Boston-Glory--Ep-78-e2tv5dm, minutes 0:42 - 0:55.
 - TrueSkill original paper: https://www.microsoft.com/en-us/research/wp-content/uploads/2006/01/TR-2006-80.pdf
 - TrueSkill Through Time paper: https://www.jstatsoft.org/article/view/v112i06
+
 
