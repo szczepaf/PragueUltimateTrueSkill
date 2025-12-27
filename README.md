@@ -54,9 +54,8 @@ pip install -r requirements.txt
 - The `gamma` parameter is a dynamic factor of skill and we again use the default value (0.03). It addresses the fact that skills change over time and inbetween games. Practically, `gamma` squared is added to uncertainty between each match. This makes sense to do between the weekly practices, but not when multiple games occur during one practice. In the future, one could write a feature which only adds gamma if some (real-life) time passes between the games, as denoted by the date column.
 
 #### Future Ideas
-- add a flag for each game: it denotes if the game is a mini or standard or another sort of a special game (e.g. with a shotclock, limited number of passes, etc.). Then, create a filter that filters out only selected game modes. This could be useful for more conservatives estimates that are not affected by the specific game-mode and could be used in long-term rankings.
-- player learning curves: TODO
-- team creator: TODO
+- Add a flag for each game: it denotes if the game is a mini or standard or another sort of a special game (e.g. with a shotclock, limited number of passes, etc.). Then, create a filter that filters out only selected game modes. This could be useful for more conservatives estimates that are not affected by the specific game-mode and could be used in long-term rankings.
+- Improve the [Team Drafter](https://pipst.github.io/PragueUltimateTrueSkill/) written by Scoot.
 
 
 #### Literature

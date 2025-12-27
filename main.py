@@ -4,12 +4,14 @@ import pandas as pd
 from trueskillthroughtime import *
 import random
 import numpy as np
+import time
+from datetime import datetime
 
 import PragueLionPlayer
 
 DEFAULT_GAMES_DB_PATH = "ranking_files/games_db.csv"
 DEFAULT_LEADERBOARD_FILE = "ranking_files/leaderboard.csv"
-RANKING_FILE = "ranking_files/private_ranking.csv"
+RANKING_FILE = f"ranking_files/private_ranking_{datetime.today().strftime('%Y-%m-%d')}.csv"
 
 # TrueSkill default values
 MU = 25
@@ -133,7 +135,7 @@ def get_players_ratings(history: History, player_names: list) -> dict[str, tuple
     return ratings
 
 
-def initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df) -> list[PragueLionPlayer]:
+def fetch_player_ratings(player_names, games_df) -> list[PragueLionPlayer]:
     """Read the game data from the source file, initialize players as PragueLionPlayer objects,
     and fetch their ratings and attendance count."""
     collections = []
@@ -143,7 +145,9 @@ def initialize_players_and_fetch_their_ratings_and_attendance(player_names, game
         game, result = parse_game_row(row)
         collections.append(game)
         results.append(result)
-    game_history = History(composition=collections, results=results, p_draw=(1/6), mu=MU, sigma=SIGMA)
+
+    times = [ datetime.strptime(t, "%Y-%m-%d").timestamp()/(60*60*24) for t in games_df.date]
+    game_history = History(composition=collections, times=times, results=results, p_draw=(1/6), mu=MU, sigma=SIGMA)
     # It is not clear how to set the parameter p_draw.
     # A larger p_draw will mean less information is gained from a draw, as it is less rare, but more information is gained from a win.
     # For now, we opt for a value of 1/6 computed from the seen data. With more games play, we will update this.
@@ -192,7 +196,7 @@ def dump_leaderboard_and_rankings(prague_lion_players: list[PragueLionPlayer], l
         for idx, player in enumerate(players_sorted, start=1):
             f.write(f"{player.name},{idx},{player.true_skill:.6f},{player.mu:.6f},{player.sigma:.6f},{player.number_of_practices},{player.number_of_games}\n")
 
-
+            
 
 def main(games_file: str = DEFAULT_GAMES_DB_PATH, leaderboard_file: str = DEFAULT_LEADERBOARD_FILE, ranking_file = RANKING_FILE, allowed_names_path: str|None = None) -> None:
     """1. Load all player names from the games database. If the database is not specified, use the default 'games_db.csv' path. Optionally, allow only players specified in a separate file.
@@ -201,15 +205,16 @@ def main(games_file: str = DEFAULT_GAMES_DB_PATH, leaderboard_file: str = DEFAUL
        4. Dump the leaderboard to a CSV file. If not specified, dump into the default 'leaderboard.csv' path.
        5. Dump all the rankings to a (private by gitignore) file. If not specified, dump into the default 'private_ranking.csv' path.
     """
-    player_names = load_all_player_names(games_file, allowed_names_path)
+    player_names: list[str] = load_all_player_names(games_file, allowed_names_path)
 
     # Load the games dataframe
-    games_df = pd.read_csv(games_file)
+    games_df: pd.DataFrame = pd.read_csv(games_file)
     
-    prague_lion_players_with_ratings = initialize_players_and_fetch_their_ratings_and_attendance(player_names, games_df)
+    prague_lion_players_with_ratings: list[PragueLionPlayer] = fetch_player_ratings(player_names, games_df)
     dump_leaderboard_and_rankings(prague_lion_players_with_ratings, leaderboard_file, ranking_file)
 
 
 if __name__ == "__main__":
     main(allowed_names_path="ranking_files/allowed_player_names.txt")
+    
 
